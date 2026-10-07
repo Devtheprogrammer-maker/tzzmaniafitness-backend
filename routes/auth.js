@@ -105,7 +105,7 @@ async function sendPasswordReset(email, userId) {
                         <tr>
                             <td align="center" style="padding-bottom: 24px;">
                             <span style="font-size: 13px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #39ff14;">
-                                Tazzmania Fitness
+                                Tzzmania Fitness
                             </span>
                             </td>
                         </tr>
@@ -161,7 +161,7 @@ async function sendPasswordReset(email, userId) {
                         <tr>
                             <td align="center" style="padding-top: 24px;">
                             <p style="margin: 0; font-size: 12px; color: #a1a1aa;">
-                                Tazzmania Fitness
+                                Tzzmania Fitness
                             </p>
                             </td>
                         </tr>
@@ -175,7 +175,7 @@ async function sendPasswordReset(email, userId) {
             `;
 
         const rawMessage = [
-            `From: Tazzmania Fitness <${process.env.GMAIL_USER}>`,
+            `From: Tzzmania Fitness <${process.env.GMAIL_USER}>`,
             `To: ${email}`,
             `Subject: Reset Your Password`,
             'MIME-Version: 1.0',
@@ -360,7 +360,7 @@ async function sendActivationEmail(user) {
                         <tr>
                             <td align="center" style="padding-bottom: 24px;">
                             <span style="font-size: 13px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #39ff14;">
-                                Tazzmania Fitness
+                                Tzzmania Fitness
                             </span>
                             </td>
                         </tr>
@@ -406,7 +406,7 @@ async function sendActivationEmail(user) {
                         <tr>
                             <td align="center" style="padding-top: 24px;">
                             <p style="margin: 0; font-size: 12px; color: #a1a1aa;">
-                                Didn't sign up for Tazzmania Fitness? You can safely ignore this email.
+                                Didn't sign up for Tzzmania Fitness? You can safely ignore this email.
                             </p>
                             </td>
                         </tr>
@@ -420,7 +420,7 @@ async function sendActivationEmail(user) {
             `;
 
         const rawMessage = [
-            `From: Tazzmania Fitness <${process.env.GMAIL_USER}>`,
+            `From: Tzzmania Fitness <${process.env.GMAIL_USER}>`,
             `To: ${user.email}`,
             `Subject: Please follow the instructions to activate your account`,
             'MIME-Version: 1.0',
@@ -497,10 +497,6 @@ router.get("/me", requireAuth, async (req, res) => {
 
         if (!user) {
             return res.status(404).json({ error: "User not found" });
-        }
-
-        if (user.status !== "active") {
-            return res.status(403).json({ error: "Please verify your email" });
         }
 
         res.json({ user });

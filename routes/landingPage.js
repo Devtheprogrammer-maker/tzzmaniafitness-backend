@@ -58,7 +58,7 @@ router.post('/send-email', contactLimiter, async (req, res) => {
                         <tr>
                             <td align="center" style="padding-bottom: 24px;">
                             <span style="font-size: 13px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #39ff14;">
-                                Tazzmania Fitness
+                                Tzzmania Fitness
                             </span>
                             </td>
                         </tr>
@@ -83,7 +83,7 @@ router.post('/send-email', contactLimiter, async (req, res) => {
                         <tr>
                             <td align="center" style="padding-top: 24px;">
                             <p style="margin: 0; font-size: 12px; color: #a1a1aa;">
-                                Tazzmania Fitness ${new Date().getFullYear()}
+                                Tzzmania Fitness ${new Date().getFullYear()}
                             </p>
                             </td>
                         </tr>
@@ -97,7 +97,7 @@ router.post('/send-email', contactLimiter, async (req, res) => {
             `;
 
         const rawMessage = [
-            `From: Tazzmania Fitness <${process.env.GMAIL_USER}>`,
+            `From: Tzzmania Fitness <${process.env.GMAIL_USER}>`,
             `To: ${process.env.GMAIL_USER}`,
             `Subject: ${subject}`,
             `In-Reply-To: <${email}>`,

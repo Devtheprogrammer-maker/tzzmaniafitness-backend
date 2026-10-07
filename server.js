@@ -12,7 +12,7 @@ import adminRoutes from "./routes/admin/checkAdmin.js"
 
 //Starts APP
 const app = express();
-app.set("trust proxy", 1);
+// app.set("trust proxy", 1);
 
 //Makes extrenal connection possible
 app.use(
