@@ -339,7 +339,7 @@ async function sendActivationEmail(user) {
             { expiresIn: '15m' }
         );
 
-        const activationUrl = `https://tzzmaniafitness.vercel.app/api/auth/activate/${activationToken}`;
+        const activationUrl = `https://tzzmaniafitness-backend.onrender.com/api/auth/activate/${activationToken}`;
 
         const gmail = await createGmailClient();
 
