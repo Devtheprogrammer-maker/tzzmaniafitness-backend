@@ -1,5 +1,5 @@
 import express from 'express';
-import createTransporter from '../emailTransporter/transporter.js';
+import createGmailClient from '../gmail/gmail.js';
 import rateLimit from 'express-rate-limit';
 
 const router = express.Router();
@@ -40,13 +40,9 @@ router.post('/send-email', contactLimiter, async (req, res) => {
     const safeMessage = escapeHtml(message).replace(/\n/g, '<br>');
 
     try {
-        const transporter = await createTransporter();
-        await transporter.sendMail({
-            from: `TazzmaniaFitness <${process.env.GMAIL_USER}>`,
-            to: process.env.GMAIL_USER,
-            replyTo: email,
-            subject: subject,
-            html: `
+        const gmail = await createGmailClient();
+
+        const html = `
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -98,7 +94,26 @@ router.post('/send-email', contactLimiter, async (req, res) => {
                 </table>
                 </body>
                 </html>
-            `
+            `;
+
+        const rawMessage = [
+            `From: Tazzmania Fitness <${process.env.GMAIL_USER}>`,
+            `To: ${process.env.GMAIL_USER}`,
+            `Subject: ${subject}`,
+            `In-Reply-To: <${email}>`,
+            'MIME-Version: 1.0',
+            'Content-Type: text/html; charset=UTF-8',
+            '',
+            html
+        ].join('\r\n');
+
+        const encodedMessage = Buffer.from(rawMessage).toString('base64url');
+
+        await gmail.users.messages.send({
+            userId: 'me',
+            requestBody: {
+                raw: encodedMessage
+            }
         });
 
         return res.status(200).json({ message: 'Email sent successfully.' });

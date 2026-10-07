@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { pool } from "../db.js";
 import { requireAuth } from '../middleware/requireAuth.js';
-import createTransporter from "../emailTransporter/transporter.js";
+import createGmailClient from "../gmail/gmail.js";
 
 //Dependencies for the email 
 // import nodemailer from 'nodemailer';
@@ -86,13 +86,9 @@ async function sendPasswordReset(email, userId) {
 
         const resetUrl = `https://tzzmaniafitness.vercel.app/reset-password/${resetToken}`;
 
-        const transporter = await createTransporter();
-        await transporter.sendMail({
-            from: `TazzmaniaFitness <${process.env.GMAIL_USER}>`,
-            to: email,
-            subject: 'Reset your password',
-            html:
-                `
+        const gmail = await createGmailClient();
+
+        const html = `
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -176,14 +172,140 @@ async function sendPasswordReset(email, userId) {
                 </table>
                 </body>
                 </html>
-            `
+            `;
+
+        const rawMessage = [
+            `From: Tazzmania Fitness <${process.env.GMAIL_USER}>`,
+            `To: ${email}`,
+            `Subject: Reset Your Password`,
+            'MIME-Version: 1.0',
+            'Content-Type: text/html; charset=UTF-8',
+            '',
+            html
+        ].join('\r\n');
+
+        const encodedMessage = Buffer.from(rawMessage).toString('base64url');
+
+        await gmail.users.messages.send({
+            userId: 'me',
+            requestBody: {
+                raw: encodedMessage
+            }
         });
+
     } catch (error) {
         console.log(error);
     }
 }
+// async function sendPasswordReset(email, userId) {
+//     try {
+//         const resetToken = jwt.sign(
+//             { userId },
+//             process.env.JWT_SECRET,
+//             { expiresIn: '15m' }
+//         );
+
+//         const resetUrl = `https://tzzmaniafitness.vercel.app/reset-password/${resetToken}`;
+
+//         const transporter = await createTransporter();
+//         await transporter.sendMail({
+//             from: `TazzmaniaFitness <${process.env.GMAIL_USER}>`,
+//             to: email,
+//             subject: 'Reset your password',
+//             html:
+//                 `
+//                 <!DOCTYPE html>
+//                 <html>
+//                 <head>
+//                 <meta charset="utf-8">
+//                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//                 </head>
+//                 <body style="margin:0; padding:0; background-color:#0b0b0b; font-family: Arial, Helvetica, sans-serif;">
+//                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#0b0b0b; padding: 40px 16px;">
+//                     <tr>
+//                     <td align="center">
+//                         <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width: 480px; width: 100%;">
+
+//                         <!-- Wordmark -->
+//                         <tr>
+//                             <td align="center" style="padding-bottom: 24px;">
+//                             <span style="font-size: 13px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #39ff14;">
+//                                 Tazzmania Fitness
+//                             </span>
+//                             </td>
+//                         </tr>
+
+//                         <!-- Card -->
+//                         <tr>
+//                             <td style="background-color:#181818; border: 1px solid #303030; border-radius: 14px; padding: 40px 32px;">
+
+//                             <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #a1a1aa;">
+//                                 Password reset
+//                             </p>
+
+//                             <h1 style="margin: 8px 0 16px 0; font-size: 26px; font-weight: 900; line-height: 1.2; color: #ffffff;">
+//                                 Choose a new password
+//                             </h1>
+
+//                             <p style="margin: 0 0 28px 0; font-size: 15px; line-height: 1.6; color: #a1a1aa;">
+//                                 We got a request to reset your password. This link expires in 15 minutes, so use it soon.
+//                             </p>
+
+//                             <!-- Button -->
+//                             <table role="presentation" cellpadding="0" cellspacing="0">
+//                                 <tr>
+//                                 <td align="center" style="border-radius: 10px; background-color: #c25cff;">
+//                                     <a href="${resetUrl}" target="_blank" style="display: inline-block; padding: 14px 32px; font-size: 14px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #ffffff; text-decoration: none;">
+//                                     Reset Password
+//                                     </a>
+//                                 </td>
+//                                 </tr>
+//                             </table>
+
+//                             <p style="margin: 32px 0 0 0; font-size: 13px; line-height: 1.6; color: #a1a1aa;">
+//                                 Button not working? Paste this link into your browser:
+//                             </p>
+//                             <p style="margin: 6px 0 0 0; font-size: 13px; line-height: 1.6; word-break: break-all;">
+//                                 <a href="${resetUrl}" target="_blank" style="color: #39ff14; text-decoration: underline;">${resetUrl}</a>
+//                             </p>
+
+//                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top: 32px; border-top: 1px solid #303030;">
+//                                 <tr>
+//                                 <td style="padding-top: 20px;">
+//                                     <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #a1a1aa;">
+//                                     Didn't request a password reset? Your account is still safe — you can ignore this email and your password will stay the same.
+//                                     </p>
+//                                 </td>
+//                                 </tr>
+//                             </table>
+
+//                             </td>
+//                         </tr>
+
+//                         <!-- Footer -->
+//                         <tr>
+//                             <td align="center" style="padding-top: 24px;">
+//                             <p style="margin: 0; font-size: 12px; color: #a1a1aa;">
+//                                 Tazzmania Fitness
+//                             </p>
+//                             </td>
+//                         </tr>
+
+//                         </table>
+//                     </td>
+//                     </tr>
+//                 </table>
+//                 </body>
+//                 </html>
+//             `
+//         });
+//     } catch (error) {
+//         console.log(error);
+//     }
+// }
 
 //Resets the password
+
 router.post('/reset-password/:token', async (req, res) => {
     const { token } = req.params;
     const { password } = req.body;
@@ -217,14 +339,11 @@ async function sendActivationEmail(user) {
             { expiresIn: '15m' }
         );
 
-        const activationUrl = `http://localhost:4000/api/auth/activate/${activationToken}`;
+        const activationUrl = `https://tzzmaniafitness.vercel.app/api/auth/activate/${activationToken}`;
 
-        const transporter = await createTransporter();
-        await transporter.sendMail({
-            from: `TazzmaniaFitness <${process.env.GMAIL_USER}>`,
-            to: user.email,
-            subject: 'Please follow the instructions to activate your account',
-            html: `
+        const gmail = await createGmailClient();
+
+        const html = `
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -298,8 +417,27 @@ async function sendActivationEmail(user) {
                 </table>
                 </body>
                 </html>
-                `
+            `;
+
+        const rawMessage = [
+            `From: Tazzmania Fitness <${process.env.GMAIL_USER}>`,
+            `To: ${user.email}`,
+            `Subject: Please follow the instructions to activate your account`,
+            'MIME-Version: 1.0',
+            'Content-Type: text/html; charset=UTF-8',
+            '',
+            html
+        ].join('\r\n');
+
+        const encodedMessage = Buffer.from(rawMessage).toString('base64url');
+
+        await gmail.users.messages.send({
+            userId: 'me',
+            requestBody: {
+                raw: encodedMessage
+            }
         });
+
     } catch (error) {
         console.log(error)
     }
