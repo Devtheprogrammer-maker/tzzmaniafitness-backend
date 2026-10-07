@@ -35,6 +35,10 @@ app.use('/api/membership', membershipRoutes);
 app.use('/api/index', indexRoutes);
 app.use('/api/admin', adminRoutes);
 
+app.get('/ping', (req, res) => {
+    res.status(200).send('Server is awake');
+});
+
 //Logs Requests
 app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
