@@ -499,6 +499,10 @@ router.get("/me", requireAuth, async (req, res) => {
             return res.status(404).json({ error: "User not found" });
         }
 
+        if (user.status !== "active") {
+            return res.status(403).json({ error: "Please verify your email" });
+        }
+
         res.json({ user });
     } catch (error) {
         console.log(error)
@@ -532,22 +536,22 @@ router.post('/signup', async (req, res) => {
         //Creates the token
         //userID - The information you want the token to carry.
         //JWT_SECRECT - The secret is used by JWT to cryptographically sign the token
-        const token = jwt.sign(
-            { userId: user.id },
-            process.env.JWT_SECRET,
-            { expiresIn: '7d', }
-        );
+        // const token = jwt.sign(
+        //     { userId: user.id },
+        //     process.env.JWT_SECRET,
+        //     { expiresIn: '7d', }
+        // );
 
         //Sends the token to the browser in a cookie called token (user)
-        res.cookie("token", token, {
-            //means JavaScript running in the browser can't directly read that cookie.
-            httpOnly: true,
-            //In production, this means the cookie should only be sent over HTTPS.
-            secure: process.env.NODE_ENV?.toLowerCase() === "production",
-            // This controls when the browser sends the cookie in cross-site situations and provides some protection against certain CSRF attacks.
-            sameSite: "lax",
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days, in milliseconds
-        });
+        // res.cookie("token", token, {
+        //     //means JavaScript running in the browser can't directly read that cookie.
+        //     httpOnly: true,
+        //     //In production, this means the cookie should only be sent over HTTPS.
+        //     secure: process.env.NODE_ENV?.toLowerCase() === "production",
+        //     // This controls when the browser sends the cookie in cross-site situations and provides some protection against certain CSRF attacks.
+        //     sameSite: "lax",
+        //     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days, in milliseconds
+        // });
 
         res.status(201).json(user);
 
