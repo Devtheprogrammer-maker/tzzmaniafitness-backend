@@ -469,20 +469,20 @@ router.get('/activate/:token', async (req, res) => {
         if (result.rowCount === 0) {
             message = encodeURIComponent('Activation link is invalid or has expired.');
             verified = encodeURIComponent('false');
-            return res.redirect(`https://tzzmaniafitness-backend.onrender.com/login?verified=${verified}&message=${message}`);
+            return res.redirect(`https://tzzmaniafitness.vercel.app/login?verified=${verified}&message=${message}`);
         }
 
         message = encodeURIComponent('You are now verified! Please log in.')
         verified = encodeURIComponent('true');
         //response
-        res.redirect(`https://tzzmaniafitness-backend.onrender.com/login?verified=${verified}&message=${message}`);
+        res.redirect(`https://tzzmaniafitness.vercel.app/login?verified=${verified}&message=${message}`);
 
     } catch (error) {
         message = encodeURIComponent('Activation link is invalid or has expired.');
         verified = encodeURIComponent('false');
         //response
         console.log(error);
-        res.redirect(`https://tzzmaniafitness-backend.onrender.com/login?verified=${verified}&message=${message}`);
+        res.redirect(`https://tzzmaniafitness.vercel.app/login?verified=${verified}&message=${message}`);
     }
 });
 
