@@ -543,7 +543,7 @@ router.post('/signup', async (req, res) => {
             //means JavaScript running in the browser can't directly read that cookie.
             httpOnly: true,
             //In production, this means the cookie should only be sent over HTTPS.
-            secure: process.env.NODE_ENV.toLowerCase === "production",
+            secure: process.env.NODE_ENV?.toLowerCase() === "production",
             // This controls when the browser sends the cookie in cross-site situations and provides some protection against certain CSRF attacks.
             sameSite: "none",
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days, in milliseconds
@@ -611,7 +611,7 @@ router.post('/login', async (req, res) => {
         //Send the token to the browser
         res.cookie("token", token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
+            secure: process.env.NODE_ENV?.toLowerCase() === "production",
             sameSite: "none",
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
