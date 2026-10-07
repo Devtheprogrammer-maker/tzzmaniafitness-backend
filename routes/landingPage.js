@@ -104,7 +104,7 @@ router.post('/send-email', contactLimiter, async (req, res) => {
         return res.status(200).json({ message: 'Email sent successfully.' });
     } catch (error) {
         console.log(error);
-        return res.status(500).json({ message: 'Something went wrong please try again later.' });
+        return res.status(500).json({ message: `Something went wrong please try again later. ${error}` });
     }
 });
 

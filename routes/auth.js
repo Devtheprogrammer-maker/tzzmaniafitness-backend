@@ -84,7 +84,7 @@ async function sendPasswordReset(email, userId) {
             { expiresIn: '15m' }
         );
 
-        const resetUrl = `http://localhost:5173/tzzmaniafitness/reset-password/${resetToken}`;
+        const resetUrl = `https://tzzmaniafitness.vercel.app/reset-password/${resetToken}`;
 
         const transporter = await createTransporter();
         await transporter.sendMail({

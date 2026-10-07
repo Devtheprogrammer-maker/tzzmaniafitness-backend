@@ -20,6 +20,7 @@ export default async function createTransporter() {
     const accessToken = await new Promise((resolve, reject) => {
         oauth2Client.getAccessToken((err, token) => {
             if (err) return reject('Failed to fetch access token');
+            //if (err) return reject(err);
             resolve(token);
         });
     });
