@@ -99,8 +99,8 @@ router.post('/send-email', contactLimiter, async (req, res) => {
         const rawMessage = [
             `From: Tzzmania Fitness <${process.env.GMAIL_USER}>`,
             `To: ${process.env.GMAIL_USER}`,
-            `Subject: ${subject}`,
-            `In-Reply-To: <${email}>`,
+            `Subject: [Website Contact] ${subject}`,
+            `Reply-To: <${email}>`,
             'MIME-Version: 1.0',
             'Content-Type: text/html; charset=UTF-8',
             '',
