@@ -415,97 +415,94 @@ router.get("/me", requireAuth, async (req, res) => {
 });
 
 const DUMMY_HASH = bcrypt.hashSync('not-a-real-password', SALT_ROUNDS);
+const MIN_AGE = 15;
+const MAX_CONTACTS = 2;
+const E164 = /^\+[1-9]\d{6,14}$/;
+
+// "YYYY-MM-DD" -> { dob, age }, or null if it isn't a real calendar date
+function parseDob(value) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+    if (!match) return null;
+    const [y, m, d] = match.slice(1).map(Number);
+    const dob = new Date(y, m - 1, d);
+    if (dob.getFullYear() !== y || dob.getMonth() !== m - 1 || dob.getDate() !== d) return null;
+
+    const now = new Date();
+    let age = now.getFullYear() - y;
+    if (now.getMonth() < m - 1 || (now.getMonth() === m - 1 && now.getDate() < d)) age--;
+    return { dob, age };
+}
+
 router.post('/signup', async (req, res) => {
-    //Gets the info
-    const { name, email, password, phone, date_of_brith, username,
-        emergencyname, relationship, emgphone } = req.body ?? {};
+    const { name, email, password, phone, date_of_birth, username, emergencyContacts, acceptedTerms } = req.body ?? {};
 
-    const fields = [name, email, password, phone, date_of_brith, username,
-        emergencyname, relationship, emgphone];
-
-    if (fields.some((f) => typeof f !== 'string' || !f.trim())) {
+    const required = [name, email, password, phone, date_of_birth, username];
+    if (required.some((f) => typeof f !== 'string' || !f.trim())) {
         return res.status(400).json({ error: "Please enter all required fields *" });
+    }
+
+    if (acceptedTerms !== true) {
+        return res.status(400).json({ error: "You must accept the Terms & Conditions." });
     }
 
     if (password.length < 8 || password.length > 72) {
         return res.status(400).json({ error: "Password must be 8 to 72 characters." });
     }
 
-    let dob;
+    const parsed = parseDob(date_of_birth);
+    if (!parsed || parsed.age < 0) {
+        return res.status(400).json({ error: "Invalid date of birth." });
+    }
+    if (parsed.age < MIN_AGE) {
+        return res.status(400).json({ error: `You must be at least ${MIN_AGE} years old to sign up.` });
+    }
+
+    if (!E164.test(phone.trim())) {
+        return res.status(400).json({ error: "Please enter a valid phone number." });
+    }
+
+    if (!Array.isArray(emergencyContacts) || emergencyContacts.length < 1 || emergencyContacts.length > MAX_CONTACTS) {
+        return res.status(400).json({ error: `Please add 1 to ${MAX_CONTACTS} emergency contacts.` });
+    }
+
+    const contacts = [];
+    for (const [i, c] of emergencyContacts.entries()) {
+        if (typeof c?.name !== 'string' || !c.name.trim() || typeof c?.relationship !== 'string' || !c.relationship.trim()) {
+            return res.status(400).json({ error: `Emergency contact ${i + 1} needs a name and relationship.` });
+        }
+        if (typeof c.phone !== 'string' || !E164.test(c.phone.trim())) {
+            return res.status(400).json({ error: `Emergency contact ${i + 1} has an invalid phone number.` });
+        }
+        contacts.push({ name: c.name.trim(), relationship: c.relationship.trim(), phone: c.phone.trim() });
+    }
 
     try {
-        //Hashing the password
         const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(date_of_brith.trim())) throw new Error("bad format");
-        dob = Temporal.PlainDate.from(date_of_brith.trim());
-
-        // const result = await pool.query(
-        //     "INSERT INTO users (name, username, email, password_hash) VALUES ($1, $2, $3, $4) RETURNING id, name, username, email", [name, username, email, passwordHash]
-        // );
-        // const user = result.rows[0];
 
         const user = await db.transaction(async (tx) => {
             const u = await tx.orm.public.User.create({
-                name,
+                name: name.trim(),
                 email: email.trim().toLocaleLowerCase(),
                 password_hash: passwordHash,
-                phone,
+                phone: phone.trim(),
             });
 
             await tx.orm.public.MemberProfile.create({
                 user_id: u.id,
-                date_of_birth: dob,
-                username,
+                date_of_birth: parsed.dob,
+                username: username.trim(),
             });
 
-            await tx.orm.public.EmergencyContact.create({
-                user_id: u.id,
-                name: emergencyname,
-                relationship,
-                phone: emgphone,
-            });
+            for (const contact of contacts) {
+                await tx.orm.public.EmergencyContact.create({ user_id: u.id, ...contact });
+            }
             return u;
         });
 
-        //Send activation email
         await sendActivationEmail(user);
 
-        //node -e "console.log(require('crypto').randomBytes(32).toString('hex'))" <=== GENERATES THE STRING FOR YOU
-
-        //Creates the token
-        //userID - The information you want the token to carry.
-        //JWT_SECRECT - The secret is used by JWT to cryptographically sign the token
-        // const token = jwt.sign(
-        //     { userId: user.id },
-        //     process.env.JWT_SECRET,
-        //     { expiresIn: '7d', }
-        // );
-
-        //Sends the token to the browser in a cookie called token (user)
-        // res.cookie("token", token, {
-        //     //means JavaScript running in the browser can't directly read that cookie.
-        //     httpOnly: true,
-        //     //In production, this means the cookie should only be sent over HTTPS.
-        //     secure: process.env.NODE_ENV?.toLowerCase() === "production",
-        //     // This controls when the browser sends the cookie in cross-site situations and provides some protection against certain CSRF attacks.
-        //     sameSite: "lax",
-        //     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days, in milliseconds
-        // });
-
         res.status(201).json({ id: user.id, name: user.name, email: user.email });
-
     } catch (error) {
-        // if (error.code === "23505") {
-        //     // error.constraint will be something like "users_email_key" or "users_username_key"
-        //     if (error.constraint?.includes("email")) {
-        //         return res.status(409).json({ error: "Email already in use" });
-        //     }
-        //     if (error.constraint?.includes("username")) {
-        //         return res.status(409).json({ error: "Username already taken" });
-        //     }
-        //     return res.status(409).json({ error: "Account already exists" });
-        // }
         console.error(error);
         res.status(500).json({ error: "Signup failed" });
     }
