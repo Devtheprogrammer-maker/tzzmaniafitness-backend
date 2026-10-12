@@ -3,7 +3,7 @@ import "dotenv/config";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 //import { pool } from "../db.js";
-import { db } from "../src/prisma/db";
+import { db } from "../src/prisma/db.ts";
 import { requireAuth } from '../middleware/requireAuth.js';
 import createGmailClient from "../gmail/gmail.js";
 

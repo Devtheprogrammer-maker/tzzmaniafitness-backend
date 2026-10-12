@@ -1,5 +1,5 @@
 import express from "express";
-import { db } from "../../src/prisma/db"
+import { db } from "../../src/prisma/db.ts"
 import { requireAuth } from "../../middleware/requireAuth.js";
 import { requireAdmin } from "../../middleware/requireAdmin.js";
 
