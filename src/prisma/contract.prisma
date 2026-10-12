@@ -1,0 +1,97 @@
+// use prisma-8
+enum Role {
+  User = 'user'
+  Admin = 'admin'
+}
+
+enum Status {
+  Active = 'active'
+  Inactive = 'inactive'
+  Pending = 'pending'
+}
+
+enum MembershipType {
+  DayPass = 'day_pass'
+  Weekly = 'weekly'
+  Monthly = 'monthly'
+  Annual = 'annual'
+}
+
+enum MembershipStatus {
+  @@type("pg/text@1")
+  Active = 'active'
+  Due_Soon = 'due_soon'
+  Expired = 'expired'
+  Cancelled = 'cancelled'
+}
+
+model User {
+  id                 Int                @id @default(autoincrement())
+  name               VarChar(100)
+  email              VarChar(255)       @unique
+  password_hash      VarChar(255)
+  phone              VarChar(30)
+  role               Role               @default(User)
+  created_at         DateTime           @default(now())
+  last_sign_in       DateTime?
+
+  profile            MemberProfile?
+  emergency_contacts EmergencyContact[]
+  memberships        UserMembership[]
+
+  @@map("users")
+}
+
+model MemberProfile {
+  user_id       Int           @id
+  date_of_birth Date
+  username      VarChar(50)   @unique
+  profile_pic   VarChar(255)?
+  streak        Int           @default(0)
+  status        Status        @default(Pending)
+  user          User          @relation(fields: [user_id], references: [id])
+
+  @@map("member_profiles")
+}
+
+model EmergencyContact {
+  id           Int          @id @default(autoincrement())
+  user_id      Int
+  name         VarChar(100)
+  relationship VarChar(50)
+  phone        VarChar(30)
+  user         User         @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
+  @@map("emergency_contacts")
+}
+
+model Membership {
+  id               Int              @id @default(autoincrement())
+  name             VarChar(100)
+  price            Numeric(10, 2)
+  type             MembershipType
+  amenities        String[]
+  is_popular       Boolean          @default(false)
+
+  user_memberships UserMembership[]
+
+  @@map("memberships")
+}
+
+model UserMembership {
+  id            Int              @id @default(autoincrement())
+  user_id       Int
+  membership_id Int
+  start_date    DateTime
+  end_date      DateTime
+  status        MembershipStatus @default(Active)
+  created_at    DateTime         @default(now())
+
+  user          User             @relation(fields: [user_id], references: [id])
+  membership    Membership       @relation(fields: [membership_id], references: [id])
+
+  @@index([user_id])
+  @@index([membership_id])
+  @@map("user_memberships")
+}

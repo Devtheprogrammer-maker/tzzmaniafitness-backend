@@ -6,13 +6,15 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node --watch server.js",
-    "start": "node server.js"
+    "dev": "tsx watch server.js",
+    "start": "tsx server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@prisma/client": "^7.10.0",
+    "@prisma/orm-postgres": "^8.0.0-rc.17",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
@@ -22,6 +24,11 @@
     "googleapis": "^180.0.0",
     "jsonwebtoken": "^9.0.3",
     "nodemailer": "^10.0.9",
-    "pg": "^8.22.0"
+    "pg": "^8.22.0",
+    "temporal-polyfill": "^1.0.5"
+  },
+  "devDependencies": {
+    "prisma": "^8.0.0-rc.22",
+    "tsx": "^4.23.15"
   }
 }

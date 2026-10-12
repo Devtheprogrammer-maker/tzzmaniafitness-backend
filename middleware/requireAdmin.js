@@ -1,9 +1,16 @@
-import { pool } from "../db.js";
+import { db } from "../src/prisma/db"
 
 export async function requireAdmin(req, res, next) {
     try {
-        const result = await pool.query("SELECT role FROM users WHERE id = $1", [req.userId]);
-        const user = result.rows[0];
+        // const result = await pool.query("SELECT role FROM users WHERE id = $1", [req.userId]);
+        // const user = result.rows[0];
+
+        if (!req.userId) return res.status(401).json({ message: "Please log in!" });
+
+        const user = await db.orm.public.User
+            .where({ id: req.userId })
+            .select("role")
+            .first();
 
         if (!user || user.role !== "admin") {
             return res.status(403).json({ message: "You need admin level to access this." });
@@ -15,7 +22,5 @@ export async function requireAdmin(req, res, next) {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server Error' });
-
     }
-
 }

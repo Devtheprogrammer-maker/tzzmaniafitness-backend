@@ -1,0 +1,164 @@
+[
+  {
+    "id": "dropDefault.users.last_sign_in",
+    "label": "Drop default on \"users\".\"last_sign_in\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "last_sign_in",
+        "table": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"last_sign_in\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "users",
+          "last_sign_in"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop default on \"last_sign_in\"",
+        "sql": "ALTER TABLE \"public\".\"users\" ALTER COLUMN \"last_sign_in\" DROP DEFAULT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"last_sign_in\" has no default",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"column_default\" IS NULL)) AS \"result\"",
+        "params": [
+          "public",
+          "users",
+          "last_sign_in"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data_migration.typechange-member_profiles-date_of_birth",
+    "label": "Data transform: typechange-member_profiles-date_of_birth",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check typechange-member_profiles-date_of_birth has work to do",
+        "sql": "SELECT EXISTS (SELECT \"user_id\" AS \"user_id\" FROM \"public\".\"member_profiles\" WHERE \"date_of_birth\" IS NOT NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run typechange-member_profiles-date_of_birth",
+        "sql": "UPDATE \"public\".\"member_profiles\" SET \"date_of_birth\" = $1::date WHERE \"date_of_birth\" IS NOT NULL",
+        "params": [
+          null
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify typechange-member_profiles-date_of_birth resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"user_id\" AS \"user_id\" FROM \"public\".\"member_profiles\" WHERE \"date_of_birth\" IS NOT NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterType.member_profiles.date_of_birth",
+    "label": "Alter type of \"member_profiles\".\"date_of_birth\" to date",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "date_of_birth",
+        "table": "member_profiles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"date_of_birth\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "member_profiles",
+          "date_of_birth"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "alter type of \"date_of_birth\"",
+        "sql": "ALTER TABLE \"public\".\"member_profiles\" ALTER COLUMN \"date_of_birth\" TYPE date USING \"date_of_birth\"::date"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"date_of_birth\" has type \"date\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "member_profiles",
+          "date_of_birth",
+          "date"
+        ]
+      }
+    ],
+    "meta": {
+      "warning": "TABLE_REWRITE"
+    }
+  },
+  {
+    "id": "alterNullability.dropNotNull.users.last_sign_in",
+    "label": "Drop NOT NULL on \"users\".\"last_sign_in\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "last_sign_in",
+        "table": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"last_sign_in\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "users",
+          "last_sign_in"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop NOT NULL on \"last_sign_in\"",
+        "sql": "ALTER TABLE \"public\".\"users\" ALTER COLUMN \"last_sign_in\" DROP NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"last_sign_in\" is nullable",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "users",
+          "last_sign_in",
+          "YES"
+        ]
+      }
+    ]
+  }
+]

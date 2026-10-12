@@ -1,0 +1,583 @@
+[
+  {
+    "id": "schema.public",
+    "label": "Create schema \"public\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"public\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"public\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "table.emergency_contacts",
+    "label": "Create table \"emergency_contacts\"",
+    "summary": "Creates table \"emergency_contacts\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "emergency_contacts"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"emergency_contacts\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"emergency_contacts\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"emergency_contacts\"",
+        "sql": "CREATE TABLE \"public\".\"emergency_contacts\" (\n  \"id\" SERIAL NOT NULL,\n  \"name\" character varying(100) NOT NULL,\n  \"phone\" character varying(30) NOT NULL,\n  \"relationship\" character varying(50) NOT NULL,\n  \"user_id\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"emergency_contacts\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"emergency_contacts\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.member_profiles",
+    "label": "Create table \"member_profiles\"",
+    "summary": "Creates table \"member_profiles\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "member_profiles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"member_profiles\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"member_profiles\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"member_profiles\"",
+        "sql": "CREATE TABLE \"public\".\"member_profiles\" (\n  \"date_of_birth\" timestamptz NOT NULL,\n  \"profile_pic\" character varying(255),\n  \"status\" text DEFAULT 'pending' NOT NULL,\n  \"streak\" int4 DEFAULT 0 NOT NULL,\n  \"user_id\" int4 NOT NULL,\n  \"username\" character varying(50) NOT NULL,\n  PRIMARY KEY (\"user_id\"),\n  CONSTRAINT \"member_profiles_status_check_149c787a\" CHECK (\"status\" IN ('active', 'inactive', 'pending'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"member_profiles\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"member_profiles\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.memberships",
+    "label": "Create table \"memberships\"",
+    "summary": "Creates table \"memberships\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "memberships"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"memberships\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"memberships\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"memberships\"",
+        "sql": "CREATE TABLE \"public\".\"memberships\" (\n  \"amenities\" text[] NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"is_popular\" bool DEFAULT false NOT NULL,\n  \"name\" character varying(100) NOT NULL,\n  \"price\" numeric(10,2) NOT NULL,\n  \"type\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"memberships_amenities_elem_not_null_8aca8596\" CHECK (array_position(\"amenities\", NULL) IS NULL),\n  CONSTRAINT \"memberships_type_check_413ae362\" CHECK (\"type\" IN ('day_pass', 'weekly', 'monthly', 'annual'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"memberships\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"memberships\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.user_memberships",
+    "label": "Create table \"user_memberships\"",
+    "summary": "Creates table \"user_memberships\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "user_memberships"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"user_memberships\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user_memberships\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"user_memberships\"",
+        "sql": "CREATE TABLE \"public\".\"user_memberships\" (\n  \"created_at\" timestamptz DEFAULT (now()) NOT NULL,\n  \"end_date\" timestamptz NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"membership_id\" int4 NOT NULL,\n  \"start_date\" timestamptz NOT NULL,\n  \"status\" text DEFAULT 'active' NOT NULL,\n  \"user_id\" int4 NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"user_memberships_status_check_61a77772\" CHECK (\"status\" IN ('active', 'due_soon', 'expired', 'cancelled'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"user_memberships\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user_memberships\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.users",
+    "label": "Create table \"users\"",
+    "summary": "Creates table \"users\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"users\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"users\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"users\"",
+        "sql": "CREATE TABLE \"public\".\"users\" (\n  \"created_at\" timestamptz DEFAULT (now()) NOT NULL,\n  \"email\" character varying(255) NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"last_sign_in\" timestamptz DEFAULT (now()) NOT NULL,\n  \"name\" character varying(100) NOT NULL,\n  \"password_hash\" character varying(255) NOT NULL,\n  \"phone\" character varying(30) NOT NULL,\n  \"role\" text DEFAULT 'user' NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"users_role_check_5b6d1a59\" CHECK (\"role\" IN ('user', 'admin'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"users\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"users\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.member_profiles.member_profiles_username_key",
+    "label": "Add unique constraint on \"member_profiles\" (username)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "member_profiles_username_key",
+        "table": "member_profiles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"member_profiles_username_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "member_profiles_username_key",
+          "public",
+          "\"public\".\"member_profiles\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"member_profiles_username_key\"",
+        "sql": "ALTER TABLE \"public\".\"member_profiles\" ADD CONSTRAINT \"member_profiles_username_key\" UNIQUE (\"username\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"member_profiles_username_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "member_profiles_username_key",
+          "public",
+          "\"public\".\"member_profiles\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.users.users_email_key",
+    "label": "Add unique constraint on \"users\" (email)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "users_email_key",
+        "table": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"users_email_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "users_email_key",
+          "public",
+          "\"public\".\"users\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"users_email_key\"",
+        "sql": "ALTER TABLE \"public\".\"users\" ADD CONSTRAINT \"users_email_key\" UNIQUE (\"email\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"users_email_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "users_email_key",
+          "public",
+          "\"public\".\"users\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.emergency_contacts.emergency_contacts_user_id_idx_6c952402",
+    "label": "Create index \"emergency_contacts_user_id_idx_6c952402\" on \"emergency_contacts\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "emergency_contacts_user_id_idx_6c952402",
+        "table": "emergency_contacts"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"emergency_contacts_user_id_idx_6c952402\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"emergency_contacts_user_id_idx_6c952402\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"emergency_contacts_user_id_idx_6c952402\"",
+        "sql": "CREATE INDEX \"emergency_contacts_user_id_idx_6c952402\" ON \"public\".\"emergency_contacts\" (\"user_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"emergency_contacts_user_id_idx_6c952402\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"emergency_contacts_user_id_idx_6c952402\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.user_memberships.user_memberships_membership_id_idx_01435d73",
+    "label": "Create index \"user_memberships_membership_id_idx_01435d73\" on \"user_memberships\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "user_memberships_membership_id_idx_01435d73",
+        "table": "user_memberships"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"user_memberships_membership_id_idx_01435d73\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user_memberships_membership_id_idx_01435d73\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"user_memberships_membership_id_idx_01435d73\"",
+        "sql": "CREATE INDEX \"user_memberships_membership_id_idx_01435d73\" ON \"public\".\"user_memberships\" (\"membership_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"user_memberships_membership_id_idx_01435d73\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user_memberships_membership_id_idx_01435d73\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.user_memberships.user_memberships_user_id_idx_6c952402",
+    "label": "Create index \"user_memberships_user_id_idx_6c952402\" on \"user_memberships\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "user_memberships_user_id_idx_6c952402",
+        "table": "user_memberships"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"user_memberships_user_id_idx_6c952402\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user_memberships_user_id_idx_6c952402\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"user_memberships_user_id_idx_6c952402\"",
+        "sql": "CREATE INDEX \"user_memberships_user_id_idx_6c952402\" ON \"public\".\"user_memberships\" (\"user_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"user_memberships_user_id_idx_6c952402\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user_memberships_user_id_idx_6c952402\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.emergency_contacts.emergency_contacts_user_id_fkey",
+    "label": "Add foreign key \"emergency_contacts_user_id_fkey\" on \"emergency_contacts\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "emergency_contacts_user_id_fkey",
+        "table": "emergency_contacts"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"emergency_contacts_user_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "emergency_contacts_user_id_fkey",
+          "public",
+          "\"public\".\"emergency_contacts\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"emergency_contacts_user_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"emergency_contacts\"\nADD CONSTRAINT \"emergency_contacts_user_id_fkey\"\nFOREIGN KEY (\"user_id\")\nREFERENCES \"public\".\"users\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"emergency_contacts_user_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "emergency_contacts_user_id_fkey",
+          "public",
+          "\"public\".\"emergency_contacts\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.member_profiles.member_profiles_user_id_fkey",
+    "label": "Add foreign key \"member_profiles_user_id_fkey\" on \"member_profiles\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "member_profiles_user_id_fkey",
+        "table": "member_profiles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"member_profiles_user_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "member_profiles_user_id_fkey",
+          "public",
+          "\"public\".\"member_profiles\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"member_profiles_user_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"member_profiles\"\nADD CONSTRAINT \"member_profiles_user_id_fkey\"\nFOREIGN KEY (\"user_id\")\nREFERENCES \"public\".\"users\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"member_profiles_user_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "member_profiles_user_id_fkey",
+          "public",
+          "\"public\".\"member_profiles\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.user_memberships.user_memberships_user_id_fkey",
+    "label": "Add foreign key \"user_memberships_user_id_fkey\" on \"user_memberships\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "user_memberships_user_id_fkey",
+        "table": "user_memberships"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"user_memberships_user_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_memberships_user_id_fkey",
+          "public",
+          "\"public\".\"user_memberships\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"user_memberships_user_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"user_memberships\"\nADD CONSTRAINT \"user_memberships_user_id_fkey\"\nFOREIGN KEY (\"user_id\")\nREFERENCES \"public\".\"users\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"user_memberships_user_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_memberships_user_id_fkey",
+          "public",
+          "\"public\".\"user_memberships\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.user_memberships.user_memberships_membership_id_fkey",
+    "label": "Add foreign key \"user_memberships_membership_id_fkey\" on \"user_memberships\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "user_memberships_membership_id_fkey",
+        "table": "user_memberships"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"user_memberships_membership_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_memberships_membership_id_fkey",
+          "public",
+          "\"public\".\"user_memberships\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"user_memberships_membership_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"user_memberships\"\nADD CONSTRAINT \"user_memberships_membership_id_fkey\"\nFOREIGN KEY (\"membership_id\")\nREFERENCES \"public\".\"memberships\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"user_memberships_membership_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_memberships_membership_id_fkey",
+          "public",
+          "\"public\".\"user_memberships\""
+        ]
+      }
+    ]
+  }
+]

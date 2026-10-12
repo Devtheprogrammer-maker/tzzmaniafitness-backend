@@ -1,6 +1,7 @@
-import express from "express";
+import express, { json } from "express";
 import { requireAuth } from '../middleware/requireAuth.js';
-import { pool } from '../db.js';
+//import { pool } from '../db.js';
+import { db } from '../src/prisma/db'
 
 const router = express.Router();
 
@@ -12,41 +13,22 @@ router.get('/userInfo', requireAuth, async (req, res) => {
             });
         }
 
-        const result = await pool.query(
-            `
-            SELECT
-                users.name AS user_name,
-                memberships.name AS membership_name,
-                memberships.price,
-                user_memberships.start_date,
-                user_memberships.due_date,
-                user_memberships.status
-            FROM user_memberships
-            INNER JOIN memberships
-                ON user_memberships.membership_id = memberships.id
-            INNER JOIN users
-                ON user_memberships.user_id = users.id
-            WHERE users.id = $1;
-            `,
-            [req.userId]
-        );
+        const userMembership = db.sql.public.user_memberships.as("um").innerJoin(db.sql.public.users.as("u"), (f, fns) => fns.eq(f.um.user_id, f.u.id))
+            .innerJoin(db.sql.public.memberships.as("m"), (f, fns) => fns.eq(f.um.membership_id, f.m.id))
+            .select((f) => ({ name: f.u.name, membership_name: f.m.name, price: f.m.price, start_date: f.um.start_date, due_date: f.um.end_date, status: f.um.status }))
+            .where((f, fns) => fns.eq(f.u.id, req.userId))
+            .limit(10)
+            .build();
 
-        if (result.rows.length === 0) {
+        const rows = await db.runtime().query(userMembership);
+
+        if (rows.length === 0) {
             return res.status(404).json({
                 message: 'Membership information not found',
             });
         }
 
-        const userInfo = result.rows[0];
-
-        return res.status(200).json({
-            name: userInfo.user_name,
-            membership_name: userInfo.membership_name,
-            price: userInfo.price,
-            start_date: userInfo.start_date,
-            due_date: userInfo.due_date,
-            status: userInfo.status,
-        });
+        return res.status(200).json({ rows });
 
     } catch (error) {
         console.error('Failed to fetch user info:', error);
@@ -61,39 +43,15 @@ router.get('/userInfo', requireAuth, async (req, res) => {
 router.get('/get-memberships', async (req, res) => {
 
     try {
-        const memberships = await pool.query(' SELECT name, price, type, amenities, is_popular FROM memberships');
+        //const memberships = await pool.query(' SELECT name, price, type, amenities, is_popular FROM memberships');
+        const memberships = await db.orm.public.Membership.all();
 
-        if (!memberships) {
-            res.json({ message: 'There are no memberships avdv' })
-        }
-        res.status(200).json(memberships.rows);
+        res.status(200).json(memberships);
 
     } catch (error) {
         res.status(500).json({ message: 'Failed to fetch data' })
     }
 
 })
-
-
-router.post('/', requireAuth, (req, res) => {
-    const { plan_type, amount } = req.body;
-
-    if (!plan_type || !amount) {
-        return res.status(400).json({ error: 'Please enter both a paymentplan and amount' });
-    }
-
-    try {
-        const result = pool.query(`INSERT INTO memberships (user_id, plan_type, amount, status)
-       VALUES ($1, $2, $3, 'pending_payment')
-       RETURNING *`,
-            [req.userId, plan_type, amount]);
-
-        res.status(201).json(result.rows[0]);
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ error: "Failed to create membership" });
-    }
-
-});
 
 export default router; 
